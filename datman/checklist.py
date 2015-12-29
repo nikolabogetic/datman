@@ -56,6 +56,15 @@ class Checklist:
 
     That is, the top-level must be a dictionary, and entries below it must also 
     be dictionaries. 
+
+    For example: 
+
+        blacklist: 
+            xnat-extract:
+                SPN01_CMH_0001_01_01_T1_03_SagT1-BRAVO: truncated
+                SPN01_CMH_0002_01_01_DTI60_03_DTI: too much head motion
+            dm-proc-rest:
+                SPN01_CMH_0020_01_01_RST_07_Ax-RestingState: missing TRs
     """
 
     def __init__(self, stream=None):
