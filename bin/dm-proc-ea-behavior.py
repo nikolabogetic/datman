@@ -2,13 +2,12 @@
 """Process empathic accuracy behavioural data.
 
 Usage:
-    dm-proc-ea-behaviour.py [options] <datadir> <assets> <outputdir>
-    dm-proc-ea-behaviour.py [options] <datadir> <assets> <outputdir> <session>
+    dm-proc-ea-behaviour.py [options] <study>
+    dm-proc-ea-behaviour.py [options] <study> <session>
+
 
 Arguments:
-    <datadir>           Path to the datman data/ folder containing nii/ and RESOURCES/
-    <assets>            Path to an assets folder containing
-                             EA-timing.csv, EA-vid-lengths.csv
+    <study>             Study to process
     <outputdir>         Path to output folder
     <session>           Recording session to process
 
@@ -17,6 +16,7 @@ Options:
     -q --quiet                  Suppress output.
     -v --verbose                Show more output.
     -d --debug                  Show lots of output.
+    -o --output                 Directory for output
     --logdir=<logdir>           Directory to store generated logs
                                     [default: /archive/logs/dm-proc-ea-behaviour]
     --walltime TIME             Walltime for each session job [default: 4:00:00]
@@ -41,6 +41,8 @@ from docopt import docopt
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+
+datadir = None
 
 def check_complete(outputdir, session):
     """Checks to see if the output files have been created.
@@ -414,8 +416,8 @@ def move_files_from_local(local_outdir, outputdir):
 
 
 def main(local_outdir, arguments):
-
-    datadir    = arguments['<datadir>']
+    global datadir
+    study    = arguments['<study>']
     outputdir  = arguments['<outputdir>']
     assets     = arguments['<assets>']
     session    = arguments['<session>']
@@ -423,6 +425,7 @@ def main(local_outdir, arguments):
     walltime   = arguments['--walltime']
     dryrun     = arguments['--dryrun']
     logdir     = arguments['--logdir']
+
 
 
     if session:
@@ -460,7 +463,7 @@ def main(local_outdir, arguments):
                        (QUIET and ' --quiet' or '')
                 opts = opts + ' --logdir {}'.format(arguments['--logdir'])
 
-                commands.append(" ".join([__file__, opts, datadir, assets,
+                commands.append(" ".join([__file__, opts, study,
                                           outputdir, session]))
 
 
@@ -643,9 +646,30 @@ if __name__=='__main__':
     DEBUG        = arguments['--debug']
     QUIET        = arguments['--quiet']
 
-    outputdir  = arguments['<outputdir>']
+    outputdir  = arguments['--output']
     session    = arguments['<session>']
 
+    cfg = dm.config.config()
+    try:
+        cfg.set_study_config(study)
+    except KeyError:
+        msg = 'Invalid study:{}'.format(study)
+        logger.error(msg)
+        return(msg)
+
+    # get the datadir from cfg
+    if cfg.key_exists('study', ['PROJECTDIR']):
+        datadir = cfg.study_config['PROJECTDIR'] \
+                .replace('${DATMAN_PROJECTSDIR}',
+                         cfg.site_config['SystemSettings'][cfg.system_name]['DATMAN_PROJECTSDIR'])
+        datadir = os.path.join(datadir, 'data')
+    else:
+        msg = 'Failed to find datadir'
+        logger.error(msg)
+        return(msg)
+
+    if not outputdir:
+        outputdir = os.path.join(datadir, 'ea')
     # create a local tmpdir
     tmp_outdir = tempfile.mkdtemp()
 
