@@ -42,9 +42,9 @@ if tmpdir == None:
 # if in DEBUG mode than print all the important arguments to the screen
 if DEBUG:
     for i in range(0,len(inputs)):
-        print "input {}: {}".format(i,inputs[i])
-    print "output is {}".format(output)
-    print "tmpdir is: {}".format(tmpdir)
+        print("input {}: {}".format(i,inputs[i]))
+    print("output is {}".format(output))
+    print("tmpdir is: {}".format(tmpdir))
 
 ## make the tmpdir
 dm.utils.makedirs(tmpdir)

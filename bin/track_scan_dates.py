@@ -32,7 +32,7 @@ def main():
         try:
             projects = set(con.get_xnat_projects(study))
         except ValueError:
-            print "Study does not exist"
+            print("Study does not exist")
             return 0
 
         tracking_table = dict()
@@ -72,12 +72,12 @@ def main():
 
 
 def printdict(output):
-    print "{:<15} {:<15} {:<30} {:<40}".format("Site", "Scan Date", "Latest Upload Date", "Time Between Last Uploads")
+    print("{:<15} {:<15} {:<30} {:<40}".format("Site", "Scan Date", "Latest Upload Date", "Time Between Last Uploads"))
     for key, values in output.iteritems():
         pdate = values[date]
         update = values[uploaddate]
         updiff = values[uploaddiff]
-        print "{:<15} {:<15} {:<30} {:<40}".format(key, str(pdate), str(update), str(updiff))
+        print("{:<15} {:<15} {:<30} {:<40}".format(key, str(pdate), str(update), str(updiff)))
 
 def dttostr(dt):
     hours, rem = divmod(dt.seconds, 3600)

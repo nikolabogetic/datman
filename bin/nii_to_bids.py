@@ -85,7 +85,7 @@ def get_missing_data(data, nii_file, site):
             if 'ParallelReductionFactorInPlane' in data.keys():
                 acc = data['ParallelReductionFactorInPlane']
             data["TotalReadoutTime"] = str(float(data["EffectiveEchoSpacing"])*(npe/acc-1))
-        except KeyError, key:
+        except KeyError as key:
             logger.info(
             "Total readout time cannot be calculated due to missing information {} in JSON for: {}".format(key, nii_file))
 
@@ -427,7 +427,7 @@ def main():
 
     try:
         sites = cfg.get_sites()
-    except KeyError,err:
+    except KeyError as err:
         logger.error(err)
         sys.exit(1)
 
@@ -493,7 +493,7 @@ def main():
                     ext = os.path.splitext(subject_nii_path + item)[1]
                     try:
                         type_dir, bids_name = to_bids_name(ident, tag, cnt, type_folders, ext)
-                    except ValueError, err:
+                    except ValueError as err:
                         logger.info(err)
                         continue
                     if tag in tag_map["fmri"]:
@@ -549,7 +549,7 @@ def main():
         try:
             logger.info("Deleting: {}".format(folder))
             os.rmdir(folder)
-        except Exception, e:
+        except Exception as e:
             logger.info("Folder {} contains multiple acquistions. Should not be deleted.")
 
 

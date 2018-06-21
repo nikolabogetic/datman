@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 
-from setuptools import setup
+import os
+import sys
 import glob
+
+from setuptools import setup
 
 # pypi doesn't like markdown
 # https://github.com/pypa/packaging-problems/issues/46
@@ -10,6 +13,9 @@ try:
     description = pypandoc.convert('README.md', 'rst')
 except (IOError, ImportError):
     description = ''
+
+if sys.version_info < (3, 5):
+    raise ValueError("Minimum Python version supported is 3.5")
 
 setup(
     name='datman',
@@ -28,5 +34,5 @@ setup(
        'Intended Audience :: Science/Research',
     ],
     install_requires=['docopt', 'matplotlib', 'numpy', 'pandas', 'requests',
-        'scipy', 'scikit-image', 'pyyaml', 'nibabel', 'pydicom', 'qbatch'],
- )
+                      'scipy', 'scikit-image', 'nibabel', 'pydicom', 'qbatch'],
+    )

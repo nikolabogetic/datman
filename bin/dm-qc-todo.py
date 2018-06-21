@@ -123,7 +123,7 @@ def main():
 
             # notify about unchecked QC reports
             if not checklistdict[qcdocname]:
-                print '{}: QC doc not signed off on'.format(qcdoc)
+                print('{}: QC doc not signed off on'.format(qcdoc))
 
 if __name__ == '__main__':
     main()

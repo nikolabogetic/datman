@@ -1,5 +1,4 @@
 """Functions for interacting with the dashboard database"""
-from __future__ import absolute_import
 import logging
 import dashboard
 #from dashboard.models import Study, Session, Scan, ScanType

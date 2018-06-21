@@ -277,7 +277,7 @@ def process_behav_data(log, out_path, sub, trial_type, block_id):
 
     try:
         pic, vid, mri_start = log_parser(log)
-    except Exception, e:
+    except Exception as e:
         logger.error('Failed to parse log file: {}'.format(log))
         raise e
 
@@ -562,7 +562,7 @@ def analyze_subject(subject, config, study):
                 corr_all.extend(corr)
                 push_all.extend(push)
                 timings_all.extend(timings)
-        except Exception, e:
+        except Exception as e:
             msg = 'Failed to parse logs for {}, with {}.'.format(subject, str(e))
             logger.error(msg)
             sys.exit(1)

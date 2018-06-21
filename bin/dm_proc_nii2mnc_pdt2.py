@@ -36,7 +36,8 @@ DRYRUN          = arguments['--dry-run']
 T2_TAG          = arguments['--T2-tag']
 PD_TAG          = arguments['--PD-tag']
 
-if DEBUG: print arguments
+if DEBUG:
+    print(arguments)
 #set default tag values
 if T2_TAG == None: T2_TAG = '_T2_'
 if PD_TAG == None: PD_TAG = '_PD_'

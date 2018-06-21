@@ -41,8 +41,8 @@ def main():
             manifest = datman.utils.get_archive_headers(archive,
                                                         stop_after_first=False)
             filepath, headers = manifest.items()[0]
-            print ",".join([archive,filepath])
-            print "\t"+"\n\t".join(headers.dir())
+            print(",".join([archive,filepath]))
+            print("\t"+"\n\t".join(headers.dir()))
         return
 
     headers = arguments['--headers'] and arguments['--headers'].split(',') or \
@@ -61,7 +61,7 @@ def main():
             if arguments['--oneseries']: break
 
     data = pd.DataFrame(rows)
-    print data.to_csv(index=False)
+    print(data.to_csv(index=False))
 
 if __name__ == '__main__':
     main()

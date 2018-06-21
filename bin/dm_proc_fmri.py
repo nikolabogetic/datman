@@ -61,7 +61,7 @@ def check_inputs(config, tag, path, expected_tags):
         raise Exception('tag {} not defined in Sites:site:ExportInfo or Sites:site:links'.format(tag))
 
     if n_found != n_expected:
-        logger.warning('Found {} files with tag {}, expected {}, check outputs to ensure quality'.format(n_found,tag,n_expected)) 
+        logger.warning('Found {} files with tag {}, expected {}, check outputs to ensure quality'.format(n_found,tag,n_expected))
 
 def export_directory(source, destination):
     """
@@ -86,7 +86,7 @@ def export_file(source, destination):
     if not os.path.isfile(destination):
         try:
             shutil.copyfile(source, destination)
-        except IOError, e:
+        except IOError as e:
             raise Exception('Problem exporting {} to {}'.format(source, destination))
 
 def export_file_list(pattern, files, output_dir):

@@ -82,7 +82,8 @@ T1_TAG          = arguments['--T1-tag']
 T2_TAG          = arguments['--T2-tag']
 PD_TAG          = arguments['--PD-tag']
 
-if DEBUG: print arguments
+if DEBUG:
+    print(arguments)
 #set default tag values
 if T1_TAG == None: T1_TAG = '_T1_'
 if T2_TAG == None: T2_TAG = '_T2_'
@@ -112,7 +113,8 @@ def doCIVETlinking(colname, archive_tag, civet_ext):
                 for fname in os.listdir(mncdir):
                     if archive_tag in fname:
                         mncfiles.append(fname)
-                if DEBUG: print "Found {} {} in {}".format(len(mncfiles),archive_tag,mncdir)
+                if DEBUG:
+                    print("Found {} {} in {}".format(len(mncfiles),archive_tag,mncdir))
                 if len(mncfiles) == 1:
                     checklist[colname][i] = mncfiles[0]
                 elif len(mncfiles) > 1 & QCedTranfer:
@@ -128,7 +130,8 @@ def doCIVETlinking(colname, archive_tag, civet_ext):
             # make the link
             if pd.isnull(checklist[colname][i])==False:
                 mncpath = os.path.join(mncdir,checklist[colname][i])
-                if DEBUG: print("linking {} to {}".format(mncpath, target))
+                if DEBUG:
+                    print("linking {} to {}".format(mncpath, target))
                 os.symlink(mncpath, target)
 
 ### build a template .sh file that gets submitted to the queue
@@ -216,7 +219,8 @@ def checkrunsh(filename):
     tmprunsh = os.path.join(tempdir,os.path.basename(filename))
     makeCIVETrunsh(tmprunsh)
     if filecmp.cmp(filename, tmprunsh):
-        if DEBUG: print("{} already written - using it".format(filename))
+        if DEBUG:
+            print("{} already written - using it".format(filename))
     else:
         # If the two files differ - then we use difflib package to print differences to screen
         print('#############################################################\n')
@@ -326,7 +330,8 @@ for i in range(0,len(checklist)):
         else :
             civetlogs = os.path.join(civet_out,subid,'logs')
             faillogs = glob.glob(civetlogs + '/*.failed')
-            if DEBUG: print "Found {} fails for {}: {}".format(len(faillogs),subid,faillogs)
+            if DEBUG:
+                print("Found {} fails for {}: {}".format(len(faillogs),subid,faillogs))
             if len(faillogs) > 0:
                 checklist['notes'][i] = "CIVET failed :("
 

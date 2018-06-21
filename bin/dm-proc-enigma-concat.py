@@ -58,7 +58,8 @@ VERBOSE         = arguments['--verbose']
 DEBUG           = arguments['--debug']
 DRYRUN          = arguments['--dry-run']
 
-if DEBUG: print arguments
+if DEBUG:
+    print(arguments)
 
 ## if no result file is given use the default name
 outputdir = os.path.normpath(outputdir)
@@ -79,7 +80,8 @@ if len(ROIfiles) == 0:
 ## if we still haven't found any files..give up and exit
 if len(ROIfiles) == 0:
     sys.exit('Could not find any csv files with tag *{}*'.format(ROItxt_tag))
-if DEBUG: print ROIfiles
+if DEBUG:
+    print(ROIfiles)
 
 ## load the first ROIfile to get column header info
 firstROItxt = pd.read_csv(ROIfiles[0], sep=',', dtype=str, comment='#')

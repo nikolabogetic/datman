@@ -53,7 +53,8 @@ VERBOSE         = arguments['--verbose']
 DEBUG           = arguments['--debug']
 DRYRUN          = arguments['--dry-run']
 
-if DEBUG: print arguments
+if DEBUG:
+    print(arguments)
 
 ## if no result file is given use the default name
 outputdir = os.path.normpath(outputdir)

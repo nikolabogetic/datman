@@ -6,7 +6,6 @@ import PIL.ImageDraw
 import PIL.ImageFont
 import numpy as np
 import nibabel as nib
-from future.utils import viewitems
 import argparse
 
 
@@ -177,7 +176,7 @@ def make_slice_mask_colored(slice_mask, colors, transparancy=0.5):
     """
     slice_mask_4d = get_4d(slice_mask, transparancy=transparancy)
 
-    for key, value in viewitems(colors):
+    for (key, value) in colors.items():
         matches = (slice_mask == key)
         if matches.any():
             slice_mask_4d[matches, 0] = value[0]

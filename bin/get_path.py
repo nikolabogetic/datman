@@ -12,7 +12,6 @@ Details:
     uses datman/config.py for project details, returns path definitions
     from tigrlab_config.yaml or project_settings.yml
 """
-from __future__ import print_function
 import sys
 from docopt import docopt
 from datman import config

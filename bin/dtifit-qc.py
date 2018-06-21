@@ -52,7 +52,8 @@ VERBOSE         = arguments['--verbose']
 DEBUG           = arguments['--debug']
 DRYRUN          = arguments['--dry-run']
 
-if DEBUG: print arguments
+if DEBUG:
+    print(arguments)
 if QCdir == None: QCdir = os.path.join(dtifitdir,'QC')
 
 ## check that FSL has been loaded - if not exists

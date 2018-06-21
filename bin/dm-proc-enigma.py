@@ -293,7 +293,7 @@ def write_run_script(filename, output_dir, CALC_MD, CALC_ALL):
 
     #and...don't forget to close the file
     enigmash.close()
-    os.chmod(filename, 0755)
+    os.chmod(filename, 0o755)
 
 
 ### check the template .sh file that gets submitted to the queue to make sure

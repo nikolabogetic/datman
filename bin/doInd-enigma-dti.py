@@ -63,7 +63,7 @@ def main():
     DRYRUN    = arguments['--dry-run']
 
     if DEBUG:
-        print arguments
+        print(arguments)
 
     if os.path.isfile(FAmap) == False:
         sys.exit("Input file {} doesn't exist.".format(FAmap))
@@ -113,7 +113,7 @@ def main():
     csv_out_avg = os.path.join(roi_dir, img_basename + '_FAskel_ROIout_avg.csv')
 
     # copy input fa file to working directory
-    utils.run('cp {} {} '.format(input_fa, os.path.join(output_dir, img_fa))
+    utils.run('cp {} {} '.format(input_fa, os.path.join(output_dir, img_fa)))
 
     os.chdir(output_dir)
 
