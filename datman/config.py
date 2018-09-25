@@ -10,7 +10,6 @@ import logging
 import yaml
 import os
 import datman.scanid
-from future.utils import iteritems
 
 logger = logging.getLogger(__name__)
 
@@ -174,7 +173,7 @@ class config(object):
                 logger.debug("No sites defined for {}".format(project))
                 continue
 
-            for key, site_config in self.study_config['Sites'].iteritems():
+            for key, site_config in self.study_config['Sites'].items():
                 try:
                     add_tags = [t.lower() for t in site_config['SITE_TAGS']]
                 except KeyError:
@@ -456,7 +455,7 @@ class config(object):
         tags = {}
         tags[default_tag] = []
 
-        for site, site_config in self.study_config['Sites'].iteritems():
+        for site, site_config in self.study_config['Sites'].items():
             # Some sites use both the default and a site_tag so every defined
             # site should be in the default list (if a default is defined)
             tags[default_tag].append(site)

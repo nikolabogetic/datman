@@ -1,6 +1,12 @@
 import collections
 import yaml
 
+#python 2 - 3 compatibility hack
+try:
+    basestring
+except NameError:
+    basestring = str
+
 tree = lambda: collections.defaultdict(tree)
 
 # register a recursive defaultdict with pyyaml

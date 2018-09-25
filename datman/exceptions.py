@@ -3,13 +3,14 @@
 
 class XnatException(Exception):
     """Default exception for xnat errors"""
-    study = None
-    session = None
+    def __init__(self, msg, study=None, session=None):
 
-    def __repr__(self):
-        return 'Study:{} Session:{} Error:{}'.format(self.study,
-                                                     self.session,
-                                                     self.message)
+        # Call the base class constructor with the parameters it needs
+        super().__init__(msg)
+
+        # Now for your custom args...
+        self.study = study
+        self.session = session
 
 
 class DashboardException(Exception):

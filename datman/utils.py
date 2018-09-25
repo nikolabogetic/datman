@@ -19,7 +19,6 @@ import subprocess as proc
 import pydicom as dcm
 import numpy as np
 import nibabel as nib
-import pyxnat
 
 import datman.config
 import datman.scanid as scanid
@@ -332,7 +331,7 @@ def get_subjects(path):
     Finds all of the subject folders in the supplied directory, and returns
     their basenames.
     """
-    subjects = filter(os.path.isdir, glob.glob(os.path.join(path, '*')))
+    subjects = list(filter(os.path.isdir, glob.glob(os.path.join(path, '*'))))
     for i, subj in enumerate(subjects):
         subjects[i] = os.path.basename(subj)
     subjects.sort()
@@ -370,7 +369,7 @@ def get_xnat_catalog(data_path, subject):
         folders = os.listdir(os.path.join(data_path, 'dicom', subject))
         folders.sort()
         files = os.listdir(os.path.join(data_path, 'dicom', subject, folders[0]))
-        files = filter(lambda x: '.xml' in x, files)
+        files = list(filter(lambda x: '.xml' in x, files))
         catalogs.append(os.path.join(data_path, 'dicom', subject, folders[0], files[0]))
 
     catalogs.sort()
@@ -593,8 +592,8 @@ def filter_niftis(candidates):
     """
     Takes a list and returns all items that contain the extensions '.nii' or '.nii.gz'.
     """
-    candidates = filter(lambda x: 'nii.gz' == '.'.join(x.split('.')[1:]) or
-                                     'nii' == '.'.join(x.split('.')[1:]), candidates)
+    candidates = list(filter(lambda x: 'nii.gz' == '.'.join(x.split('.')[1:]) or
+                                     'nii' == '.'.join(x.split('.')[1:]), candidates))
 
     return candidates
 
@@ -636,19 +635,6 @@ class cd(object):
     def __exit__(self, e, value, traceback):
         os.chdir(self.old_path)
 
-class XNATConnection(object):
-    def __init__(self,  xnat_url, user_name, password):
-        self.server = xnat_url
-        self.user = user_name
-        self.password = password
-
-    def __enter__(self):
-        self.connection = pyxnat.Interface(server=self.server, user=self.user,
-                password=self.password)
-        return self.connection
-
-    def __exit__(self, type, value, traceback):
-        self.connection.disconnect()
 
 def get_xnat_credentials(config, xnat_cred):
     if not xnat_cred:
@@ -793,10 +779,10 @@ def submit_job(cmd, job_name, log_dir, system = 'other',
 def get_resources(open_zipfile):
     # filter dirs
     files = open_zipfile.namelist()
-    files = filter(lambda f: not f.endswith('/'), files)
+    files = list(filter(lambda f: not f.endswith('/'), files))
 
     # filter files named like dicoms
-    files = filter(lambda f: not is_named_like_a_dicom(f), files)
+    files = list(filter(lambda f: not is_named_like_a_dicom(f), files))
 
     # filter actual dicoms :D.
     resource_files = []

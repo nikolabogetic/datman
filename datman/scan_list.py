@@ -54,7 +54,7 @@ def generate_scan_list(scan_entry_class, zip_files, dest_dir):
         processed_scans = get_scan_list_contents(output)
     except Exception as e:
         raise RuntimeError("Can't read scan entries from existing scans.csv "
-                "file. Reason: {}".format(e.message))
+                "file. Reason: {}".format(e))
 
     new_entries = make_new_entries(processed_scans, zip_files, scan_entry_class)
 
@@ -99,8 +99,7 @@ def make_new_entries(processed_scans, zip_files, EntryClass):
         try:
             entry = EntryClass(zip_file)
         except Exception as e:
-            logger.error("Cant make an entry for {}. Reason: {}".format(zip_file,
-                    e.message))
+            logger.error("Cant make an entry for {}. Reason: {}".format(zip_file, e))
             continue
 
         new_entries.append(str(entry))
@@ -138,3 +137,13 @@ class ScanEntryABC(object):
     def __str__(self):
         return "\t".join([self.source_name, self.get_target_name(),
                 self.patient_name, self.study_id + "\n"])
+
+
+class ExampleScanEntry(datman.scan_list.ScanEntryABC):
+
+    def __init__(self, scan_path):
+        super(ExampleScanEntry, self).__init__(scan_path)
+
+    def get_target_name(self):
+        ... (code to generate correct datman ID goes here) ...
+        return datman_id

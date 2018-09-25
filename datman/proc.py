@@ -10,7 +10,6 @@ import logging
 
 import pandas as pd
 
-import datman as dm
 import datman.utils
 
 logger = logging.getLogger(__name__)
@@ -21,7 +20,7 @@ def get_subject_list(input_dir, subject_filter, QC_file):
     minus any phantoms or not qced subjects,
     Also removes any subject ids that do not contain the subject_filter string
     """
-    subject_list = dm.utils.get_subjects(input_dir)
+    subject_list = datman.utils.get_subjects(input_dir)
     subject_list = remove_phantoms(subject_list)
     if subject_filter is not None:
         subject_list = remove_subjects_using_filter(subject_list, subject_filter)
