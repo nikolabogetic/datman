@@ -5,7 +5,7 @@ import requests
 import time
 import tempfile
 import os
-import urllib
+import urllib.parse
 import getpass
 from datman.exceptions import XnatException
 from xml.etree import ElementTree
@@ -157,10 +157,10 @@ class xnat(object):
         return(result['items'][0])
 
     def get_sessions(self, study):
-        logger.debug('Querying xnat server for sessions in study'
+        logger.debug('Querying xnat server for sessions in study: {}'
                      .format(study))
         if not self.get_project(study):
-            raise XnatException('Invalid xnat project:'
+            raise XnatException('Invalid xnat project: {}'
                                 .format(study))
 
         url = '{}/data/archive/projects/{}/subjects/'.format(self.server,
@@ -326,7 +326,7 @@ class xnat(object):
         try:
             result = self._make_xnat_query(url)
         except:
-            raise XnatException("Failed getting resource ids with url:"
+            raise XnatException("Failed getting resource ids with url: {}"
                                 .format(url))
         if result is None:
             raise XnatException('Experiment:{} not found for session:{}'
@@ -350,7 +350,7 @@ class xnat(object):
 
         if not folderName:
             # foldername not specified return them all
-            resource_id = [val for val in resource_ids.itervalues()]
+            resource_id = [val for val in resource_ids.values()]
         else:
             # check if folder exists, if not create it
             try:
@@ -396,7 +396,7 @@ class xnat(object):
         try:
             result = self._make_xnat_xml_query(url)
         except:
-            return XnatException("Failed getting resources with url:"
+            return XnatException("Failed getting resources with url: {}"
                                  .format(url))
         if result is None:
             raise XnatException('Experiment:{} not found for session:{}'
@@ -452,7 +452,7 @@ class xnat(object):
             e.session = session
             raise e
         except IOError as e:
-            logger.error('Failed to open file:{} with excuse:'
+            logger.error('Failed to open file:{} with excuse: {}'
                          .format(filename, e.strerror))
             err = XnatException("Error in file:{}".
                                 format(filename))
@@ -514,7 +514,7 @@ class xnat(object):
                      "resources/{resource_id}/" \
                      "files/{filename}?inbody=true"
 
-        uploadname = urllib.quote(filename)
+        uploadname = urllib.parse.quote(filename)
 
         url = attach_url.format(server=self.server,
                                 project=project,
