@@ -8,7 +8,8 @@ SCANID_RE = '(?P<study>[^_]+)_' \
             '(?P<site>[^_]+)_' \
             '(?P<subject>[^_]+)_' \
             '(?P<timepoint>[^_]+)_' \
-            '(?P<session>[^_]+)'
+            '(?P<session>[^_]+)_' \
+            '(?P<modality>[^_]+)'
 
 # SCANID_RE = '(?P<study>[^_]+)_' \
 #             '(?P<site>[^_]+)_' \
@@ -54,13 +55,14 @@ class ParseException(Exception):
     pass
 
 class Identifier:
-    def __init__(self, study, site, subject, timepoint, session):
+    def __init__(self, study, site, subject, timepoint, session, modality):
         self.study = study
         self.site = site
         self.subject = subject
         self.timepoint = timepoint
-        # Bug fix: spaces were being left after the session number leading to broken file names
-        self._session = session.strip()
+        self._session = session
+        self.modality = modality.strip()
+
 
     @property
     def session(self):
@@ -92,13 +94,20 @@ class Identifier:
             ident += "_" + self.session
         return ident
 
+    def get_full_subjectid_with_timepoint_session_modality(self):
+        ident = self.get_full_subjectid_with_timepoint_session()
+        if self.modality:
+            ident += "_" + self.modality
+        return ident
+
     def __str__(self):
         if self.timepoint:
             return "_".join([self.study,
                              self.site,
                              self.subject,
                              self.timepoint,
-                             self.session])
+                             self.session,
+                             self.modality])
         else:  # it's a phantom, so no timepoints
             return self.get_full_subjectid()
 
@@ -117,7 +126,8 @@ def parse(identifier):
                        site     = match.group("site"),
                        subject  = match.group("subject"),
                        timepoint= match.group("timepoint"),
-                       session  = match.group("session"))
+                       session  = match.group("session"),
+                       modality = match.group("modality"))
 
     return ident
 
@@ -131,7 +141,8 @@ def parse_filename(path):
                        site     = match.group("site"),
                        subject  = match.group("subject"),
                        timepoint= match.group("timepoint"),
-                       session  = match.group("session"))
+                       session  = match.group("session"),
+                       modality = match.group("modality"))
 
     tag = match.group("tag")
     series = match.group("series")

@@ -15,7 +15,7 @@ Arguments:
 
 Options:
     --lookup FILE            Path to scan id lookup table,
-                                overrides metadata/scans.csv
+                                overrides metadata/manifest.csv
     --scanid-field STR       Dicom field to match target_name with
                              [default: PatientName]
     -v --verbose             Verbose logging
@@ -85,6 +85,22 @@ already_linked = {}
 lookup = None
 DRYRUN = None
 
+dtypes = {'source_name':'object',
+        'PatientID':'object',
+        'PatientName':'object',
+        'StudyDate':'int64',
+        'StudyTime':'int64',
+        'visit':'int64',
+        'session':'int64',
+        'target_name':'object',
+        'uploaded':'object'
+        }
+
+#python 2 - 3 compatibility hack
+try:
+    basestring
+except NameError:
+    basestring = str
 
 def main():
     # make the already_linked dict global as we are going to use it a lot
@@ -126,7 +142,7 @@ def main():
     # setup the config object
     cfg = datman.config.config(study=study)
     if not lookup_path:
-        lookup_path = os.path.join(cfg.get_path('meta'), 'scans.csv')
+        lookup_path = os.path.join(cfg.get_path('meta'), 'manifest.csv')
 
     dicom_path = cfg.get_path('dicom')
     zips_path = cfg.get_path('zips')
@@ -145,7 +161,7 @@ def main():
         return
 
     try:
-        lookup = pd.read_table(lookup_path, sep='\s+', dtype=str)
+        lookup = pd.read_csv(lookup_path, dtype=dtypes)
     except IOError:
         logger.error('Lookup file {} not found'.format(lookup_path))
         return
@@ -210,11 +226,13 @@ def link_archive(archive_path, dicom_path, scanid_field, config):
         logger.error('Scanid not found for archive: {}'.format(archive_path))
         return
 
+    ''' Should actually validate against our naming convention.
     try:
         datman.utils.validate_subject_id(scanid, config)
     except RuntimeError as e:
         logger.error(str(e) + ". Cannot make link for {}".format(archive_path))
         return
+    '''
 
     # do the linking
     target = os.path.join(dicom_path, scanid)

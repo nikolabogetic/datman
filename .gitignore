@@ -10,3 +10,9 @@ _executable
 /tests/__pycache__
 /.pytest_cache
 /assets/bids_jsons/
+.vscode/launch.json
+config/ALC01_settings.yml
+config/NUR02_settings.yml
+config/kcni_config.yaml
+datman/scanid1.py
+bin/dm_xnat_upload1.py

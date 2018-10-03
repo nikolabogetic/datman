@@ -23,6 +23,7 @@ import sys
 import os
 import zipfile
 import urllib
+import pandas as pd
 
 from docopt import docopt
 
@@ -39,6 +40,17 @@ password = None
 server = None
 XNAT = None
 CFG = None
+
+dtypes = {'source_name':'object',
+        'PatientID':'object',
+        'PatientName':'object',
+        'StudyDate':'int64',
+        'StudyTime':'int64',
+        'visit':'int64',
+        'session':'int64',
+        'target_name':'object',
+        'uploaded':'object'
+        }
 
 
 def main():
@@ -87,7 +99,11 @@ def main():
     username, password = datman.xnat.get_auth(username)
     XNAT = datman.xnat.xnat(server, username, password)
 
+    manifest_file = os.path.join(CFG.get_path('meta'), 'manifest.csv')
+    mf = pd.read_csv(manifest_file, dtype=dtypes)
+
     dicom_dir = CFG.get_path('dicom', study)
+    zips_dir = CFG.get_path('zips', study)
     # deal with a single archive specified on the command line,
     # otherwise process all files in dicom_dir
     if archive:
@@ -102,14 +118,28 @@ def main():
             logger.error('Cant find archive:{}'.format(archive))
             return
     else:
-        archives = os.listdir(dicom_dir)
+        archives = sorted(os.listdir(dicom_dir))
 
     logger.debug('Processing files in:{}'.format(dicom_dir))
     logger.info('Processing {} files'.format(len(archives)))
-
     for archivefile in archives:
         process_archive(os.path.join(dicom_dir, archivefile))
+        
+        # Update manifest
+        logger.debug('Updating manifest {}'.format(manifest_file))
+        mf.at[mf['target_name'] == archivefile.strip('.zip'), 'uploaded'] = 'yes'
+        mf.to_csv(manifest_file, index=False)
 
+        # delete symlink and source
+        symlink_path = os.path.join(dicom_dir, archivefile)
+        source_path = os.path.join(zips_dir, os.path.basename(os.readlink(symlink_path)))
+
+        logger.debug('Deleting source file {}'.format(source_path))
+        os.remove(source_path)
+
+        logger.debug('Deleting symlink {}'.format(symlink_path))
+        os.remove(symlink_path)
+    
 
 def is_datman_id(archive):
     # scanid.is_scanid() isnt used because a complete id is needed (either
@@ -126,7 +156,7 @@ def process_archive(archivefile):
 
     xnat_session = get_xnat_session(scanid)
     if not xnat_session:
-        # failed to get xnat info
+        logger.error('Unable to get XNAT session: {}'.format(scanid))
         return
 
     try:
@@ -138,7 +168,7 @@ def process_archive(archivefile):
     if not data_exists:
         logger.info('Uploading dicoms from: {}'.format(archivefile))
         try:
-            upload_dicom_data(archivefile, xnat_session.project, str(scanid))
+            upload_dicom_data(archivefile, xnat_session.project, xnat_session.name, str(scanid))
         except Exception as e:
             logger.error('Failed uploading archive to xnat project: {}'
                          ' for subject: {}. Check Prearchive.'
@@ -149,7 +179,7 @@ def process_archive(archivefile):
     if not resource_exists:
         logger.debug('Uploading resource from: {}'.format(archivefile))
         try:
-            upload_non_dicom_data(archivefile, xnat_session.project, str(scanid))
+            upload_non_dicom_data(archivefile, xnat_session.project, xnat_session.name, str(scanid))
         except Exception as e:
             logger.debug('An exception occurred: {}'.format(e))
             pass
@@ -178,8 +208,9 @@ def get_xnat_session(ident):
                      .format(ident.study, ident.site, xnat_project, e))
         return None
     # check we can get or create the session in xnat
+    subjectid = ident.get_full_subjectid()  # Added for NIP
     try:
-        xnat_session = XNAT.get_session(xnat_project, str(ident), create=True)
+        xnat_session = XNAT.get_session(xnat_project, subjectid, create=True)
     except datman.exceptions.XnatException as e:
         logger.error('Study:{}, site:{}, archive:{} Failed getting session:{}'
                      ' from xnat with reason:{}'
@@ -201,9 +232,10 @@ def get_scanid(archivefile):
         logger.error('Invalid scanid:{} from archive:{}'
                      .format(scanid, archivefile))
         return False
-
+    
     ident = datman.scanid.parse(scanid)
-    return(ident)
+
+    return(ident)  
 
 
 def resource_data_exists(xnat_session, archive):
@@ -215,7 +247,7 @@ def resource_data_exists(xnat_session, archive):
     if empty_files:
         logger.warn("Cannot upload empty resource files {}, omitting.".format(', '.join(empty_files)))
     # paths in xnat are url encoded. Need to fix local paths to match
-    local_resources_mod = [urllib.pathname2url(p) for p in local_resources_mod]
+    local_resources_mod = [urllib.request.pathname2url(p) for p in local_resources_mod]
     if not set(local_resources_mod).issubset(set(xnat_resources)):
         return False
     return True
@@ -259,7 +291,7 @@ def check_files_exist(archive, xnat_session):
     try:
         scans_exist = scan_data_exists(xnat_session, local_headers)
     except ValueError as e:
-        logger.error("Please check {}: {}".format(archive, e.message))
+        logger.error("Please check {}: {}".format(archive, e))
         # Return true for both to prevent XNAT being modified
         return True, True
 
@@ -268,7 +300,8 @@ def check_files_exist(archive, xnat_session):
     return scans_exist, resources_exist
 
 
-def upload_non_dicom_data(archive, xnat_project, scanid):
+def upload_non_dicom_data(archive, xnat_project, subjectid, scanid):
+
     with zipfile.ZipFile(archive) as zf:
         resource_files = datman.utils.get_resources(zf)
         logger.info("Uploading {} files of non-dicom data..."
@@ -281,12 +314,7 @@ def upload_non_dicom_data(archive, xnat_project, scanid):
                 # By default files are placed in a MISC subfolder
                 # if this is changed it may require changes to
                 # check_duplicate_resources()
-                XNAT.put_resource(xnat_project,
-                                  scanid,
-                                  scanid,
-                                  item,
-                                  contents,
-                                  'MISC')
+                XNAT.put_resource(xnat_project, subjectid, scanid, item, contents, 'MISC')
                 uploaded_files.append(item)
             except Exception as e:
                 logger.error("Failed uploading file {} with error:{}"
@@ -294,19 +322,27 @@ def upload_non_dicom_data(archive, xnat_project, scanid):
         return uploaded_files
 
 
-def upload_dicom_data(archive, xnat_project, scanid):
+def upload_dicom_data(archive, xnat_project, subjectid, scanid):
     # XNAT API for upload fails if the zip contains a mix of dicom and nifti.
     # OPT CU definitely contains a mix and others may later on. Soooo
     # here's an ugly but effective fix! The niftis will get uploaded with
     # upload_non_dicom_data and added to resources - Dawn
 
+    try:
+        XNAT.put_dicoms(xnat_project, subjectid, scanid, archive)
+    except Exception as e:
+        raise e
+
+    
+    ''' Going oldschool
     if not contains_niftis(archive):
-        XNAT.put_dicoms(xnat_project, scanid, scanid, archive)
+        XNAT.put_dicoms(xnat_project, subjectid, scanid, archive)
         return
 
     with datman.utils.make_temp_directory() as temp:
         archive = strip_niftis(archive, temp)
-        XNAT.put_dicoms(xnat_project, scanid, scanid, archive)
+        XNAT.put_dicoms(xnat_project, subjectid, scanid, archive)
+    '''
 
 
 def contains_niftis(archive):

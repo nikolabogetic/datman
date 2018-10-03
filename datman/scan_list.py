@@ -139,11 +139,3 @@ class ScanEntryABC(object):
                 self.patient_name, self.study_id + "\n"])
 
 
-class ExampleScanEntry(datman.scan_list.ScanEntryABC):
-
-    def __init__(self, scan_path):
-        super(ExampleScanEntry, self).__init__(scan_path)
-
-    def get_target_name(self):
-        ... (code to generate correct datman ID goes here) ...
-        return datman_id

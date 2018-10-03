@@ -118,7 +118,7 @@ class xnat(object):
             response.raise_for_status()
 
         s.cookies = requests.utils.cookiejar_from_dict({'JSESSIONID':
-                                                        response.content})
+                                                        response.content.decode()})
         self.session = s
 
     def get_projects(self):
@@ -445,7 +445,7 @@ class xnat(object):
                                        subject=session,
                                        session=experiment)
         try:
-            with open(filename) as data:
+            with open(filename, 'rb') as data:
                 self._make_xnat_post(upload_url, data, retries, headers)
         except XnatException as e:
             e.study = project
@@ -967,7 +967,7 @@ class Session(object):
         """
         resources = []
         resource_ids = self.resource_IDs.values()
-        resource_ids.extend(self.misc_resource_IDs)
+        #resource_ids.extend(self.misc_resource_IDs)
         for r_id in resource_ids:
             resource_list = xnat_connection.get_resource_list(self.project,
                     self.name, self.experiment_label, r_id)
