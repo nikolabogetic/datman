@@ -19,10 +19,10 @@ import logging
 import sys
 import os
 import shutil
+import pandas as pd
 
 import pysftp
 import fnmatch
-import paramiko
 
 from docopt import docopt
 import datman.config
@@ -30,7 +30,27 @@ from datman.utils import make_temp_directory
 
 logging.basicConfig(level=logging.WARN,
         format="[%(asctime)s %(name)s] %(levelname)s: %(message)s")
+logging.getLogger("paramiko").setLevel(logging.WARNING)
 logger = logging.getLogger(os.path.basename(__file__))
+
+
+columns = ['source_name','PatientID','PatientName','StudyDate','StudyTime','visit','session','target_name','uploaded']
+dtypes = {'source_name':'object',
+        'PatientID':'object',
+        'PatientName':'object',
+        'StudyDate':'int64',
+        'StudyTime':'int64',
+        'visit':'int64',
+        'session':'int64',
+        'target_name':'object',
+        'uploaded':'object'
+        }
+
+#python 2 - 3 compatibility hack
+try:
+    basestring
+except NameError:
+    basestring = str
 
 def main():
     arguments = docopt(__doc__)
@@ -54,7 +74,7 @@ def main():
 
     # setup the config object
     cfg = datman.config.config(study=study)
-
+    manifest_file = os.path.join(cfg.get_path('meta'), 'manifest.csv')
     zips_path = cfg.get_path('zips')
     meta_path = cfg.get_path('meta')
     # Check the local project zips dir exists, create if not
@@ -63,6 +83,9 @@ def main():
                        .format(zips_path))
         if not dryrun:
             os.mkdir(zips_path)
+
+    # Pull up the manifest.
+    mf = get_manifest(manifest_file)
 
     server_config = get_server_config(cfg)
 
@@ -100,7 +123,7 @@ def main():
                     #  process each folder in turn
                     logger.debug('Copying from:{}  to:{}'
                                  .format(valid_dir, zips_path))
-                    process_dir(sftp, valid_dir, zips_path)
+                    process_dir(sftp, valid_dir, zips_path, mf)
 
 
 def get_server_config(cfg):
@@ -111,7 +134,7 @@ def get_server_config(cfg):
     	server_config[default_mrserver] = read_config(cfg)
     except KeyError as e:
         # No default config :(
-        logger.debug(e.message)
+        logger.debug('No default config: ' + e)
 
     # Sites may override the study defaults. If they dont, the defaults will
     # be returned and should NOT be re-added to the config
@@ -124,7 +147,7 @@ def get_server_config(cfg):
         try:
             server_config[site_server] = read_config(cfg, site=site)
         except KeyError as e:	
-            logger.debug(e.message)
+            logger.debug(e)
     return server_config
 
 
@@ -185,7 +208,7 @@ def get_valid_remote_dirs(connection, mrfolders):
     return valid_dirs
 
 
-def process_dir(connection, directory, zips_path):
+def process_dir(connection, directory, zips_path, mf):
     """Process a directory on the ftp server,
     copy new files to zips_path
     """
@@ -198,10 +221,11 @@ def process_dir(connection, directory, zips_path):
                          .format(directory))
             return
         for file_name in files:
-            if connection.isfile(file_name):
+            if file_name.endswith('.zip') and file_name.strip('.zip') not in mf.source_name.values:
                 get_file(connection, file_name, zips_path)
             else:
-                get_folder(connection, file_name, zips_path)
+                logger.warning('Skipping: {}'.format(file_name))
+                #get_folder(connection, file_name, zips_path)
 
 def get_folder(connection, folder_name, dst_path):
     expected_file = os.path.join(dst_path, folder_name + ".zip")
@@ -240,6 +264,14 @@ def download_needed(sftp, filename, target):
         return True
 
     return False
+
+def get_manifest(filename):
+    # Try to read manifest dataframe. 
+    try:
+        return pd.read_csv(filename, dtype=dtypes) 
+    except FileNotFoundError as e:
+        logger.warning('Manifest file not found. {}. Starting initial run.'.format(e))
+        return pd.DataFrame(columns=columns)    # Returning empty dataframe, so that further checks don't fail.
 
 if __name__ == '__main__':
     main()
