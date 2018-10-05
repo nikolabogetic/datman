@@ -118,7 +118,7 @@ class xnat(object):
             response.raise_for_status()
 
         s.cookies = requests.utils.cookiejar_from_dict({'JSESSIONID':
-                                                        response.content.decode()})
+                                                        response.text})
         self.session = s
 
     def get_projects(self):
@@ -723,7 +723,7 @@ class xnat(object):
                          .format(self.server, response.status_code))
             logger.debug('Username: {}')
             response.raise_for_status()
-        root = ElementTree.fromstring(response.content)
+        root = ElementTree.fromstring(response.text)
         return(root)
 
     def _make_xnat_put(self, url, retries=3):
@@ -772,18 +772,18 @@ class xnat(object):
                 response.raise_for_status()
 
         elif response.status_code is not 200:
-            if 'multiple imaging sessions.' in response.content:
+            if 'multiple imaging sessions.' in response.text:
                 raise XnatException('Multiple imaging sessions in archive,'
                                     ' check prearchive')
-            if '502 Bad Gateway' in response.content:
+            if '502 Bad Gateway' in response.text:
                 raise XnatException('Bad gateway error: Check tomcat logs')
-            if 'Unable to identify experiment' in response.content:
+            if 'Unable to identify experiment' in response.text:
                 raise XnatException('Unable to identify experiment, did dicom upload fail?')
             else:
                 raise XnatException('An unknown error occured uploading data.'
                                     'Status code:{}, reason:{}'
                                     .format(response.status_code,
-                                            response.content))
+                                            response.text))
 
     def _make_xnat_delete(self, url, retries=3):
         try:

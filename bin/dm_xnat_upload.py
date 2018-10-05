@@ -123,22 +123,27 @@ def main():
     logger.debug('Processing files in:{}'.format(dicom_dir))
     logger.info('Processing {} files'.format(len(archives)))
     for archivefile in archives:
-        process_archive(os.path.join(dicom_dir, archivefile))
+        uploaded = process_archive(os.path.join(dicom_dir, archivefile))
         
-        # Update manifest
-        logger.debug('Updating manifest {}'.format(manifest_file))
-        mf.at[mf['target_name'] == archivefile.strip('.zip'), 'uploaded'] = 'yes'
-        mf.to_csv(manifest_file, index=False)
+        if uploaded:
+            # Update manifest
+            logger.info('Updating manifest {}'.format(manifest_file))
+            mf.at[mf['target_name'] == archivefile.strip('.zip'), 'uploaded'] = 'yes'
+            mf.to_csv(manifest_file, index=False)
 
-        # delete symlink and source
-        symlink_path = os.path.join(dicom_dir, archivefile)
-        source_path = os.path.join(zips_dir, os.path.basename(os.readlink(symlink_path)))
+            # delete symlink and source
+            symlink_path = os.path.join(dicom_dir, archivefile)
+            source_path = os.path.join(zips_dir, os.path.basename(os.readlink(symlink_path)))
 
-        logger.debug('Deleting source file {}'.format(source_path))
-        os.remove(source_path)
+            logger.info('Deleting source file {}'.format(source_path))
+            os.remove(source_path)
 
-        logger.debug('Deleting symlink {}'.format(symlink_path))
-        os.remove(symlink_path)
+            logger.info('Deleting symlink {}'.format(symlink_path))
+            os.remove(symlink_path)
+        else:
+            logger.info('Updating manifest {}'.format(manifest_file))
+            mf.at[mf['target_name'] == archivefile.strip('.zip'), 'uploaded'] = 'error'
+            mf.to_csv(manifest_file, index=False)
     
 
 def is_datman_id(archive):
@@ -152,18 +157,18 @@ def process_archive(archivefile):
     """Upload data from a zip archive to the xnat server"""
     scanid = get_scanid(os.path.basename(archivefile))
     if not scanid:
-        return
+        return False
 
     xnat_session = get_xnat_session(scanid)
     if not xnat_session:
         logger.error('Unable to get XNAT session: {}'.format(scanid))
-        return
+        return False
 
     try:
         data_exists, resource_exists = check_files_exist(archivefile, xnat_session)
     except Exception as e:
         logger.error('Failed checking xnat for session: {}'.format(scanid))
-        return
+        return False
 
     if not data_exists:
         logger.info('Uploading dicoms from: {}'.format(archivefile))
@@ -174,15 +179,17 @@ def process_archive(archivefile):
                          ' for subject: {}. Check Prearchive.'
                          .format(xnat_session.project, str(scanid)))
             logger.info('Upload failed with reason: {}'.format(str(e)))
-            return
+            return False
 
     if not resource_exists:
-        logger.debug('Uploading resource from: {}'.format(archivefile))
+        logger.info('Uploading resource from: {}'.format(archivefile))
         try:
             upload_non_dicom_data(archivefile, xnat_session.project, xnat_session.name, str(scanid))
         except Exception as e:
-            logger.debug('An exception occurred: {}'.format(e))
+            logger.error('An exception occurred: {}'.format(e))
             pass
+
+    return True
 
 
 def get_xnat_session(ident):
