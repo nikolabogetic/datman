@@ -90,6 +90,11 @@ def main():
 
     logger.addHandler(ch)
 
+    # Starting.
+    print('###########################')
+    print('##   UPLOADING TO XNAT   ##')
+    print('###########################')
+
     # setup the config object
     logger.info('Loading config')
 

@@ -92,9 +92,19 @@ def generate_xnat_sessionIDs(study, dataframe):
     # If study == <YOUR STYDY>: <your code>
     # uid = study + cmh + PatientName + visit + session + mr
     for index, row in dataframe.iterrows():
+        patientname = row['PatientName']
+        if str(patientname)[0:3] == "SCZ":
+            patientname = "1" + str(patientname)[3:]
+        elif str(patientname)[0:3] == "HCT":
+            patientname = "2" + str(patientname)[3:]
+        elif str(patientname)[0:2] == "FM":
+            patientname = "3" + str(patientname)[2:]
+        elif str(patientname)[0:2] == "MG":
+            patientname = "4" + str(patientname)[2:]
+        
         uid = (study + '_'
                 + 'CMH_'
-                + row['PatientName'] + '_'
+                + patientname + '_'
                 + str(row['visit']).zfill(2) + '_'
                 + 'SE' + str(row['session']).zfill(2) + '_'
                 + 'MR')
@@ -138,7 +148,7 @@ def main():
     if not os.path.isdir(zips_path):
         logger.error('Zips path {} doesnt exist'.format(zips_path))
         return
-
+    
     # Pull up the manifest.
     mf = get_manifest(manifest_file)
 

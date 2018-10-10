@@ -139,6 +139,12 @@ def main():
 
     logger.addHandler(ch)
 
+    # Starting.
+    print('###########################')
+    print('##   CREATING SYMLINKS   ##')
+    print('###########################')
+
+
     # setup the config object
     cfg = datman.config.config(study=study)
     if not lookup_path:

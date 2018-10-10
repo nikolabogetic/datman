@@ -28,10 +28,8 @@ from docopt import docopt
 import datman.config
 from datman.utils import make_temp_directory
 
-logging.basicConfig(level=logging.WARN,
-        format="[%(asctime)s %(name)s] %(levelname)s: %(message)s")
-logging.getLogger("paramiko").setLevel(logging.WARNING)
 logger = logging.getLogger(os.path.basename(__file__))
+logger_cfg = logging.getLogger('datman')
 
 
 columns = ['source_name','PatientID','PatientName','StudyDate','StudyTime','visit','session','target_name','uploaded']
@@ -61,16 +59,30 @@ def main():
     study = arguments['<study>']
 
     # setup logging
-    log_level = logging.WARN
-
+    ch = logging.StreamHandler(sys.stdout)
+    ch.setLevel(logging.WARN)
+    logger.setLevel(logging.WARN)
     if quiet:
-        log_level = logging.ERROR
+        logger.setLevel(logging.ERROR)
+        ch.setLevel(logging.ERROR)
     if verbose:
-        log_level = logging.INFO
+        logger.setLevel(logging.INFO)
+        ch.setLevel(logging.INFO)
     if debug:
-        log_level = logging.DEBUG
+        logger.setLevel(logging.DEBUG)
+        ch.setLevel(logging.DEBUG)
 
-    logging.getLogger().setLevel(log_level)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - {study} - %(levelname)s - %(message)s'.format(study=study))
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+
+    # setup logging for config
+    logger_cfg.addHandler(ch)
+
+    # Starting.
+    print('###########################')
+    print('## DOWNLOADING FROM SFTP ##')
+    print('###########################')
 
     # setup the config object
     cfg = datman.config.config(study=study)
@@ -83,7 +95,7 @@ def main():
                        .format(zips_path))
         if not dryrun:
             os.mkdir(zips_path)
-
+    
     # Pull up the manifest.
     mf = get_manifest(manifest_file)
 
