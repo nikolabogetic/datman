@@ -55,7 +55,7 @@ def get_headers(archive):
             header = pydicom.dcmread(io.BytesIO(zf.read(f)))    
             break
         except pydicom.filereader.InvalidDicomError:
-            logger.warning('Invalid Dicom:{}'.format(f))
+            logger.debug('Invalid Dicom:{}'.format(f))
             continue
         except zipfile.BadZipfile:
             logger.warning('Error in zipfile:{}'.format(f))
@@ -92,14 +92,26 @@ def generate_xnat_sessionIDs(study, dataframe):
     # If study == <YOUR STYDY>: <your code>
     # uid = study + cmh + PatientName + visit + session + mr
     for index, row in dataframe.iterrows():
+        subjectid = get_subjectid(study, row['PatientName'])
+        
         uid = (study + '_'
                 + 'CMH_'
-                + row['PatientName'] + '_'
+                + subjectid + '_'
                 + str(row['visit']).zfill(2) + '_'
                 + 'SE' + str(row['session']).zfill(2) + '_'
                 + 'MR')
         dataframe.at[index, 'target_name'] = uid
     return dataframe
+
+def get_subjectid(study, patientid):
+    if study == 'NUR02':
+        patientid = patientid.replace('SCZ', '1')
+        patientid = patientid.replace('HCT', '2')
+        patientid = patientid.replace('FM', '3')
+        patientid = patientid.replace('MG', '4')
+        return patientid
+    else:
+        return patientid
 
 def main():
     arguments = docopt(__doc__)
@@ -138,7 +150,7 @@ def main():
     if not os.path.isdir(zips_path):
         logger.error('Zips path {} doesnt exist'.format(zips_path))
         return
-
+    
     # Pull up the manifest.
     mf = get_manifest(manifest_file)
 

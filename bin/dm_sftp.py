@@ -29,7 +29,7 @@ import datman.config
 from datman.utils import make_temp_directory
 
 logger = logging.getLogger(os.path.basename(__file__))
-logger_cfg = logging.getLogger('datman')
+dm_logger = logging.getLogger('datman')
 
 
 columns = ['source_name','PatientID','PatientName','StudyDate','StudyTime','visit','session','target_name','uploaded']
@@ -76,8 +76,8 @@ def main():
     ch.setFormatter(formatter)
     logger.addHandler(ch)
 
-    # setup logging for config
-    logger_cfg.addHandler(ch)
+    # setup logging for datman
+    dm_logger.addHandler(ch)
 
     # Starting.
     print('###########################')

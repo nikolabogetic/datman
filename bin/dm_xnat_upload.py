@@ -34,6 +34,7 @@ import datman.xnat
 import datman.exceptions
 
 logger = logging.getLogger(os.path.basename(__file__))
+dm_logger = logging.getLogger('datman')
 
 username = None
 password = None
@@ -87,8 +88,10 @@ def main():
                                   '%(levelname)s - %(message)s'.format(
                                    study=study))
     ch.setFormatter(formatter)
-
     logger.addHandler(ch)
+
+    # setup logging for datman
+    dm_logger.addHandler(ch)
 
     # Starting.
     print('###########################')
