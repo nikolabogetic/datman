@@ -133,7 +133,7 @@ def main():
 
                 for valid_dir in valid_dirs:
                     #  process each folder in turn
-                    logger.debug('Copying from:{}  to:{}'
+                    logger.info('Copying from:{}  to:{}'
                                  .format(valid_dir, zips_path))
                     process_dir(sftp, valid_dir, zips_path, mf)
 
@@ -236,7 +236,7 @@ def process_dir(connection, directory, zips_path, mf):
             if file_name.endswith('.zip') and file_name.strip('.zip') not in mf.source_name.values:
                 get_file(connection, file_name, zips_path)
             else:
-                logger.warning('Skipping: {}'.format(file_name))
+                logger.debug('Skipping: {}'.format(file_name))
                 #get_folder(connection, file_name, zips_path)
 
 def get_folder(connection, folder_name, dst_path):
