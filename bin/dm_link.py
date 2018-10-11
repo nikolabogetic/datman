@@ -272,7 +272,7 @@ def get_scanid_from_lookup_table(archive_path):
     lookupinfo = lookup[lookup['source_name'] == source_name]
 
     if len(lookupinfo) == 0:
-        logger.debug("{} not found in source_name column."
+        logger.warning("{} not found in source_name column."
                      .format(source_name))
         return
     else:
