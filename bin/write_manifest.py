@@ -110,6 +110,13 @@ def get_subjectid(study, patientid):
         patientid = patientid.replace('FM', '3')
         patientid = patientid.replace('MG', '4')
         return patientid
+    elif study == 'ALC01':
+        patientid = patientid.replace('^', '')
+        patientid = patientid.replace('-', '')
+        patientid = patientid.replace('_', '')
+        if patientid[2].isdigit():
+            patientid = patientid[2:]
+        return patientid
     else:
         return patientid
 
