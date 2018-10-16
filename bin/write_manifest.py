@@ -89,11 +89,10 @@ def reindex_sessions(dataframe):
     return dataframe
 
 def generate_xnat_sessionIDs(study, dataframe):
-    # If study == <YOUR STYDY>: <your code>
-    # uid = study + cmh + PatientName + visit + session + mr
     for index, row in dataframe.iterrows():
+        if row['target_name'] == '<ignore>':
+            continue
         subjectid = get_subjectid(study, row['PatientName'])
-        
         uid = (study + '_'
                 + 'CMH_'
                 + subjectid + '_'
