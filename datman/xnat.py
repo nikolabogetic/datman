@@ -176,7 +176,7 @@ class xnat(object):
 
         return(result['ResultSet']['Result'])
 
-    def get_session(self, study, session, create=False):
+    def get_session(self, study, session, timepoint, create=False):
         """Checks to see if session exists in xnat,
         if create and study doesnt exist will try to create it
         returns study or none"""
@@ -200,7 +200,7 @@ class xnat(object):
                 except:
                     raise XnatException("Failed to create session:{} in study:{}"
                                         .format(session, study))
-                result = self.get_session(study, session)
+                result = self.get_session(study, session, timepoint)
                 return result
         try:
             session_json = result['items'][0]
@@ -209,7 +209,8 @@ class xnat(object):
                     study)
             raise XnatException(msg)
 
-        return Session(session_json)
+        timepoint_idx = int(timepoint) - 1
+        return Session(session_json, timepoint_idx)
 
     def make_session(self, study, session):
         url = "{server}/REST/projects/{project}/subjects/{subject}"
@@ -807,14 +808,14 @@ class Session(object):
 
     raw_json = None
 
-    def __init__(self, session_json):
+    def __init__(self, session_json, timepoint_idx):
         # Session attributes
         self.raw_json = session_json
         self.name = session_json['data_fields']['label']
         self.project = session_json['data_fields']['project']
 
         # Experiment attributes
-        self.experiment = self._get_experiment()
+        self.experiment = self._get_experiment(timepoint_idx)
         self.experiment_label = self._get_experiment_label()
         self.experiment_UID = self._get_experiment_UID()
 
@@ -829,7 +830,7 @@ class Session(object):
         # Misc - basically just OPT CU1 needs this
         self.misc_resource_IDs = self._get_other_resource_IDs()
 
-    def _get_experiment(self):
+    def _get_experiment(self, timepoint_idx):
         experiments = [exp for exp in self.raw_json['children']
                 if exp['field'] == 'experiments/experiment']
 
@@ -840,7 +841,7 @@ class Session(object):
             logger.error("More than one session uploaded to ID {}. Processing "
                     "only the first.".format(self.name))
 
-        return experiments[0]['items'][0]
+        return experiments[0]['items'][timepoint_idx]
 
     def _get_experiment_label(self):
         if not self.experiment:
