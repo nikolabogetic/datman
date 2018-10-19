@@ -845,7 +845,7 @@ class Session(object):
             experiment = experiments[0]['items'][timepoint_idx]
             return experiment
         except IndexError:
-            logger.warning('Experiment with index {} not found'.format(timepoint_idx))
+            logger.debug('Experiment with index {} not found'.format(timepoint_idx))
         
         return {}
 
