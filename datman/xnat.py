@@ -841,7 +841,13 @@ class Session(object):
             logger.error("More than one session uploaded to ID {}. Processing "
                     "only the first.".format(self.name))
 
-        return experiments[0]['items'][timepoint_idx]
+        try:
+            experiment = experiments[0]['items'][timepoint_idx]
+            return experiment
+        except IndexError:
+            logger.warning('Experiment with index {} not found'.format(timepoint_idx))
+        
+        return {}
 
     def _get_experiment_label(self):
         if not self.experiment:
