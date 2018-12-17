@@ -120,7 +120,11 @@ def get_subjectid(study, patientid):
 def get_subjectid_with_sessionvisit(study, patientid):
     patientid = patientid.replace('-', '_')
     patientid = patientid.split("_")
-    patientid = patientid[2] + '_' + patientid[3] + '_SE' + patientid[4]
+    try:
+        patientid = patientid[2] + '_' + patientid[3] + '_SE' + patientid[4]
+    except IndexError:
+        logger.warning('Unable to create Participant ID: {}. Index Error.'.format(patientid))
+        patientid = 'undefined'        
     return patientid
 
 def main():
