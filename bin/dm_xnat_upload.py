@@ -224,8 +224,10 @@ def get_xnat_session(ident):
         return None
     # check we can get or create the session in xnat
     subjectid = ident.get_full_subjectid()  # Added for NIP
+    full_session_id = ident.get_full_subjectid_with_timepoint_session_modality()
+
     try:
-        xnat_session = XNAT.get_session(xnat_project, subjectid, ident.timepoint, create=True)
+        xnat_session = XNAT.get_session(xnat_project, subjectid, full_session_id, create=True)
     except datman.exceptions.XnatException as e:
         logger.error('Study:{}, site:{}, archive:{} Failed getting session:{}'
                      ' from xnat with reason:{}'

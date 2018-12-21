@@ -176,7 +176,7 @@ class xnat(object):
 
         return(result['ResultSet']['Result'])
 
-    def get_session(self, study, session, timepoint, create=False):
+    def get_session(self, study, session, full_session_id, create=False):
         """Checks to see if session exists in xnat,
         if create and study doesnt exist will try to create it
         returns study or none"""
@@ -200,7 +200,7 @@ class xnat(object):
                 except:
                     raise XnatException("Failed to create session:{} in study:{}"
                                         .format(session, study))
-                result = self.get_session(study, session, timepoint)
+                result = self.get_session(study, session, full_session_id)
                 return result
         try:
             session_json = result['items'][0]
@@ -209,8 +209,7 @@ class xnat(object):
                     study)
             raise XnatException(msg)
 
-        timepoint_idx = int(timepoint) - 1
-        return Session(session_json, timepoint_idx)
+        return Session(session_json, full_session_id)
 
     def make_session(self, study, session):
         url = "{server}/REST/projects/{project}/subjects/{subject}"
@@ -808,14 +807,14 @@ class Session(object):
 
     raw_json = None
 
-    def __init__(self, session_json, timepoint_idx):
+    def __init__(self, session_json, full_session_id):
         # Session attributes
         self.raw_json = session_json
         self.name = session_json['data_fields']['label']
         self.project = session_json['data_fields']['project']
 
         # Experiment attributes
-        self.experiment = self._get_experiment(timepoint_idx)
+        self.experiment = self._get_experiment(full_session_id)
         self.experiment_label = self._get_experiment_label()
         self.experiment_UID = self._get_experiment_UID()
 
@@ -830,22 +829,29 @@ class Session(object):
         # Misc - basically just OPT CU1 needs this
         self.misc_resource_IDs = self._get_other_resource_IDs()
 
-    def _get_experiment(self, timepoint_idx):
+    def _get_experiment(self, full_session_id):
+        # This would get the subject from xnat with all the sessions
         experiments = [exp for exp in self.raw_json['children']
                 if exp['field'] == 'experiments/experiment']
+        
+        # This would get the actual MRI sessions
+        experiments = [exp for exp in experiments[0]['items']]
 
         if not experiments:
-            logger.debug("No experiments found for {}".format(self.name))
+            logger.warn("No experiments found for {}".format(self.name))
             return {}
+        '''
         elif len(experiments) > 1:
-            logger.error("More than one session uploaded to ID {}. Processing "
-                    "only the first.".format(self.name))
+            logger.warn("More than one session uploaded to ID {}. Processing "
+                    "{}.".format(self.name, full_session_id))
+        '''
 
         try:
-            experiment = experiments[0]['items'][timepoint_idx]
+            experiment = [exp for exp in experiments if full_session_id in exp['data_fields']['label']]
+            experiment = experiment[0]
             return experiment
         except IndexError:
-            logger.debug('Experiment with index {} not found'.format(timepoint_idx))
+            logger.warn('Session {} not found on XNAT.'.format(full_session_id))
         
         return {}
 
@@ -892,7 +898,7 @@ class Session(object):
         return scans[0]
 
     def _get_scan_UIDs(self):
-        scan_uids = [str(scan['data_fields']['UID']) for scan in self.scans]
+        scan_uids = [str(scan['data_fields'].get('UID')) for scan in self.scans]
         return scan_uids
 
     def _get_scan_rIDs(self):
