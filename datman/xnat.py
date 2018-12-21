@@ -834,9 +834,6 @@ class Session(object):
         experiments = [exp for exp in self.raw_json['children']
                 if exp['field'] == 'experiments/experiment']
         
-        # This would get the actual MRI sessions
-        experiments = [exp for exp in experiments[0]['items']]
-
         if not experiments:
             logger.warn("No experiments found for {}".format(self.name))
             return {}
@@ -845,6 +842,13 @@ class Session(object):
             logger.warn("More than one session uploaded to ID {}. Processing "
                     "{}.".format(self.name, full_session_id))
         '''
+
+        # This would get the actual MRI sessions
+        try:
+            experiments = [exp for exp in experiments[0]['items']]
+        except IndexError:
+            logger.warn("No experiments found for {}".format(self.name))
+            return {}
 
         try:
             experiment = [exp for exp in experiments if full_session_id in exp['data_fields']['label']]
